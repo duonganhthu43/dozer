@@ -14,8 +14,7 @@ jobs:
   # https://github.com/orhun/git-cliff/blob/main/.github/workflows/cd.yml
   release:
     name: Release
-    runs-on:
-      labels: ${{ matrix.os }}
+    runs-on: self-hosted
     timeout-minutes: 60
     strategy:
       matrix:
