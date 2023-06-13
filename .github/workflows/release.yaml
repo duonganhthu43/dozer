@@ -12,91 +12,6 @@ permissions:
 
 jobs:
   # https://github.com/orhun/git-cliff/blob/main/.github/workflows/cd.yml
-  release-linux-aarch64:
-    name: Release Linux binary for aarch64
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - build: aarch64
-            os: ubuntu-20-16-cores
-            target: aarch64-unknown-linux-gnu
-            linker: gcc-aarch64-linux-gnu
-            use-cross: true
-            file_name: dozer
-            asset_name: dozer-linux-aarch64
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Install minimal stable with clippy and rustfmt
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          target: ${{ matrix.target }}
-          components: rustfmt, clippy
-      - name: APT update
-        run: |
-          sudo apt update
-      - name: Install target specific tools
-        if: matrix.use-cross
-        run: |
-          sudo apt-get install -y ${{ matrix.linker }}
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure target aarch64 GNU
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          echo '[target.aarch64-unknown-linux-gnu]' >> ~/.cargo/config
-          echo 'linker = "aarch64-linux-gnu-gcc"' >> ~/.cargo/config
-          echo 'JEMALLOC_SYS_WITH_LG_PAGE=16' >> $GITHUB_ENV
-      - name: Cargo build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          use-cross: false
-          args: --release --target ${{ matrix.target }} --bin ${{ matrix.file_name }}
-      - name: List target output files
-        run: ls -lR ./target
-
-      - name: Install cargo-deb
-        run: cargo install cargo-deb
-
-      - name: Compile deb file
-        run: cargo-deb -p dozer-cli --target ${{ matrix.target }} --output ./deb/${{matrix.asset_name}}.deb
-
-      - name: Prepare release assets
-        shell: bash
-        run: |
-          mkdir -p release
-          cp {LICENSE,README.md,CHANGELOG.md} release/ 2> /dev/null || echo "Copy Failed...Ignoring.."
-          cp target/${{ matrix.target }}/release/${{matrix.file_name}} release/
-
-          mv release/ ${{matrix.asset_name}}/
-
-          tar -czvf ${{matrix.asset_name}}.tar.gz ${{matrix.asset_name}}/
-
-          cp deb/${{matrix.asset_name}}.deb ${{matrix.asset_name}}/
-
-          ls -l ${{matrix.asset_name}}
-
-      
-
-      - name: List deb output files
-        run: ls -lR ./deb
-
-
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: AKIA2JYZFEFYJSBKK2H5
-          aws-secret-access-key: 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
-          aws-region: ap-southeast-1
   release:
     name: Release
     runs-on:
@@ -110,10 +25,6 @@ jobs:
             file_name: dozer
             target: x86_64-unknown-linux-gnu
             asset_name: dozer-linux-amd64
-          - os: macos-12
-            file_name: dozer
-            target: x86_64-apple-darwin
-            asset_name: dozer-macos-amd64
     steps:
       - uses: actions/checkout@v3
       - name: Install minimal stable with clippy and rustfmt
@@ -153,10 +64,6 @@ jobs:
       - name: Compile deb file
         if: matrix.os == 'ubuntu-20-16-cores'
         run: cargo-deb -p dozer-cli  --output ./deb/${{matrix.asset_name}}.deb
-
-      # - name: Build Linux binary
-      #   if: matrix.os == 'ubuntu-20-16-cores'
-      #   run: cargo build --features=snowflake --release
 
       - name: Prepare release assets
         shell: bash
