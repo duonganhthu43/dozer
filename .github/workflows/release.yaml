@@ -15,7 +15,6 @@ jobs:
   release-linux-aarch64:
     name: Release Linux binary for aarch64
     runs-on: ${{ matrix.os }}
-    needs: prepare
     strategy:
       fail-fast: false
       matrix:
@@ -102,7 +101,6 @@ jobs:
     name: Release
     runs-on:
       labels: ${{ matrix.os }}
-    needs: prepare
     timeout-minutes: 60
     strategy:
       matrix:
