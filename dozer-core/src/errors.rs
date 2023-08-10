@@ -19,6 +19,10 @@ pub enum ExecutionError {
     DuplicateInput { node: NodeHandle, port: PortHandle },
     #[error("Cannot send to channel")]
     CannotSendToChannel,
+    
+    #[error("Thu Test Error")]
+    ThuTestError,
+
     #[error("Cannot receive from channel")]
     CannotReceiveFromChannel,
     #[error("Cannot spawn worker thread: {0}")]
